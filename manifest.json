@@ -3,7 +3,7 @@
 	"name": "LNS Directories",
 	"version": "1.0.0",
 	"minAppVersion": "1.5.0",
-	"description": "볼트 안에 외부 디렉터리·파일을 심볼릭 링크(ln -s)로 연결합니다. (데스크톱 전용)",
+	"description": "Link external files and folders into your vault with symbolic links (ln -s). Desktop only.",
 	"author": "hunchulchoi",
 	"isDesktopOnly": true
 }
