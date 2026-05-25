@@ -1,4 +1,3 @@
-import { execFileSync } from "child_process";
 import type LnsDirectoriesPlugin from "./main";
 import { t } from "./i18n";
 import { LinkKind } from "./types";
@@ -42,29 +41,6 @@ function getElectronDialog(): ElectronDialog | null {
 	}
 }
 
-function pickWithMacOsDialog(
-	plugin: LnsDirectoriesPlugin,
-	kind: LinkKind,
-): string | null {
-	if (process.platform !== "darwin") return null;
-	const prompt =
-		kind === "directory"
-			? t(plugin, "dialog.pickDirectory")
-			: t(plugin, "dialog.pickFile");
-	const script =
-		kind === "directory"
-			? `POSIX path of (choose folder with prompt "${prompt}")`
-			: `POSIX path of (choose file with prompt "${prompt}")`;
-	try {
-		const out = execFileSync("/usr/bin/osascript", ["-e", script], {
-			encoding: "utf8",
-		}).trim();
-		return out || null;
-	} catch {
-		return null;
-	}
-}
-
 export async function pickFilesystemPath(
 	plugin: LnsDirectoriesPlugin,
 	kind: LinkKind,
@@ -77,26 +53,25 @@ export async function pickFilesystemPath(
 			: t(plugin, "dialog.pickFile");
 
 	const dialog = getElectronDialog();
-	if (dialog) {
-		try {
-			if (typeof dialog.showOpenDialog === "function") {
-				const result = await dialog.showOpenDialog({ title, properties });
-				if (!result.canceled && result.filePaths.length > 0) {
-					return result.filePaths[0] ?? null;
-				}
-				return null;
+	if (!dialog) return null;
+
+	try {
+		if (typeof dialog.showOpenDialog === "function") {
+			const result = await dialog.showOpenDialog({ title, properties });
+			if (!result.canceled && result.filePaths.length > 0) {
+				return result.filePaths[0] ?? null;
 			}
-			if (typeof dialog.showOpenDialogSync === "function") {
-				const result = dialog.showOpenDialogSync({ title, properties });
-				if (!result.canceled && result.filePaths.length > 0) {
-					return result.filePaths[0] ?? null;
-				}
-				return null;
-			}
-		} catch {
-			/* fall through to osascript */
+			return null;
 		}
+		if (typeof dialog.showOpenDialogSync === "function") {
+			const result = dialog.showOpenDialogSync({ title, properties });
+			if (!result.canceled && result.filePaths.length > 0) {
+				return result.filePaths[0] ?? null;
+			}
+		}
+	} catch {
+		return null;
 	}
 
-	return pickWithMacOsDialog(plugin, kind);
+	return null;
 }
