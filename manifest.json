@@ -1,0 +1,9 @@
+{
+	"id": "lns-directories",
+	"name": "LNS Directories",
+	"version": "1.0.0",
+	"minAppVersion": "1.5.0",
+	"description": "볼트 안에 외부 디렉터리·파일을 심볼릭 링크(ln -s)로 연결합니다. (데스크톱 전용)",
+	"author": "hunchulchoi",
+	"isDesktopOnly": true
+}
