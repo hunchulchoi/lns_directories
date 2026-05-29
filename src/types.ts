@@ -13,9 +13,12 @@ export interface SymlinkEntry {
 export interface LnsSettings {
 	links: SymlinkEntry[];
 	locale: LnsLocale;
+	/** Last source path used per link kind (directory vs file). */
+	lastSourcePaths?: Partial<Record<LinkKind, string>>;
 }
 
 export const DEFAULT_SETTINGS: LnsSettings = {
 	links: [],
 	locale: "auto",
+	lastSourcePaths: {},
 };

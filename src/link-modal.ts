@@ -41,6 +41,11 @@ export class LinkModal extends Modal {
 			this.linkRelative = normalizeVaultRelative(parentFolder);
 			this.parentFolder = this.linkRelative;
 		}
+		const lastSource = plugin.settings.lastSourcePaths?.[kind];
+		if (lastSource) {
+			this.sourcePath = lastSource;
+			this.linkRelative = suggestLinkRelative(lastSource, this.parentFolder);
+		}
 	}
 
 	onOpen(): void {

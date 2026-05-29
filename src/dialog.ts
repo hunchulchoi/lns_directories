@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import * as path from "path";
 import type LnsDirectoriesPlugin from "./main";
 import { t } from "./i18n";
 import { LinkKind } from "./types";
@@ -9,11 +11,31 @@ interface OpenDialogResult {
 
 interface ElectronDialog {
 	showOpenDialog(
-		options: { properties: string[]; title?: string },
+		options: { properties: string[]; title?: string; defaultPath?: string },
 	): Promise<OpenDialogResult>;
 	showOpenDialogSync?(
-		options: { properties: string[]; title?: string },
+		options: { properties: string[]; title?: string; defaultPath?: string },
 	): OpenDialogResult;
+}
+
+function defaultBrowsePath(
+	plugin: LnsDirectoriesPlugin,
+	kind: LinkKind,
+): string | undefined {
+	const last = plugin.settings.lastSourcePaths?.[kind];
+	if (!last) return undefined;
+	const resolved = path.resolve(last);
+	try {
+		if (!fs.existsSync(resolved)) {
+			const parent = path.dirname(resolved);
+			return parent !== resolved ? parent : undefined;
+		}
+		return fs.statSync(resolved).isDirectory()
+			? resolved
+			: path.dirname(resolved);
+	} catch {
+		return undefined;
+	}
 }
 
 function getElectronDialog(): ElectronDialog | null {
@@ -55,16 +77,19 @@ export async function pickFilesystemPath(
 	const dialog = getElectronDialog();
 	if (!dialog) return null;
 
+	const defaultPath = defaultBrowsePath(plugin, kind);
+	const options = { title, properties, ...(defaultPath ? { defaultPath } : {}) };
+
 	try {
 		if (typeof dialog.showOpenDialog === "function") {
-			const result = await dialog.showOpenDialog({ title, properties });
+			const result = await dialog.showOpenDialog(options);
 			if (!result.canceled && result.filePaths.length > 0) {
 				return result.filePaths[0] ?? null;
 			}
 			return null;
 		}
 		if (typeof dialog.showOpenDialogSync === "function") {
-			const result = dialog.showOpenDialogSync({ title, properties });
+			const result = dialog.showOpenDialogSync(options);
 			if (!result.canceled && result.filePaths.length > 0) {
 				return result.filePaths[0] ?? null;
 			}

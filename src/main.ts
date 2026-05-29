@@ -108,6 +108,9 @@ export default class LnsDirectoriesPlugin extends Plugin {
 		if (!this.settings.locale) {
 			this.settings.locale = "auto";
 		}
+		if (!this.settings.lastSourcePaths) {
+			this.settings.lastSourcePaths = {};
+		}
 	}
 
 	async saveSettings(): Promise<void> {
@@ -116,6 +119,10 @@ export default class LnsDirectoriesPlugin extends Plugin {
 
 	async addEntry(entry: SymlinkEntry): Promise<void> {
 		this.settings.links.push(entry);
+		if (!this.settings.lastSourcePaths) {
+			this.settings.lastSourcePaths = {};
+		}
+		this.settings.lastSourcePaths[entry.kind] = entry.source;
 		await this.saveSettings();
 		this.refreshSettingsTab();
 	}
