@@ -1,6 +1,6 @@
 {
 	"name": "lns-directories",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "볼트 안에 외부 디렉터리·파일을 심볼릭 링크로 연결하는 Obsidian 플러그인",
 	"main": "main.js",
 	"type": "module",

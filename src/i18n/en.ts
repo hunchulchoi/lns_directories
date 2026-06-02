@@ -1,11 +1,16 @@
 export const en = {
 	"ribbon.tooltip": "Link external path",
+	"ribbon.openLinksPanel": "Open links panel",
 	"ribbon.linkDirectory": "Link directory…",
 	"ribbon.linkFile": "Link file…",
 
+	"cmd.openLinksPanel": "Open LNS links panel",
 	"cmd.linkDirectory": "Link directory (symlink)",
 	"cmd.linkFile": "Link file (symlink)",
 	"cmd.refreshLinks": "Refresh symlink status",
+
+	"panel.title": "LNS links",
+	"panel.refresh": "Refresh",
 
 	"menu.addSymDirectory": "Add symlink directory",
 	"menu.addSymFile": "Add symlink file",
@@ -41,6 +46,14 @@ export const en = {
 	"settings.showInFinder": "Show in Finder",
 	"settings.openNote": "Open as note",
 	"settings.removeLink": "Remove link",
+	"settings.revealInExplorer": "Reveal in explorer",
+	"settings.showExplorerMarkersName": "Mark links in file explorer",
+	"settings.showExplorerMarkersDesc":
+		"Show a chain icon and color on registered symlink paths in the sidebar file tree.",
+	"settings.openLinksPanelName": "Links panel",
+	"settings.openLinksPanelDesc":
+		"Open a sidebar view listing all registered links.",
+	"settings.openLinksPanel": "Open links panel",
 	"settings.localeName": "Language",
 	"settings.localeDesc": "UI language for this plugin",
 

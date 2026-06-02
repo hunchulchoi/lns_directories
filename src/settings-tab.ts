@@ -1,10 +1,7 @@
-import { App, Notice, PluginSettingTab, Setting, TFile } from "obsidian";
-import * as path from "path";
-import { translateError } from "./errors";
+import { App, PluginSettingTab, Setting } from "obsidian";
 import { localeOptions, t } from "./i18n";
-import type { MessageKey } from "./i18n/en";
+import { renderLinkList } from "./link-list-ui";
 import type LnsDirectoriesPlugin from "./main";
-import { removeSymlink, checkLinkHealth, LinkHealth } from "./symlink-manager";
 import { LnsLocale } from "./types";
 
 export class LnsSettingTab extends PluginSettingTab {
@@ -41,6 +38,28 @@ export class LnsSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
+			.setName(t(this.plugin, "settings.showExplorerMarkersName"))
+			.setDesc(t(this.plugin, "settings.showExplorerMarkersDesc"))
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.showExplorerMarkers)
+					.onChange(async (value) => {
+						this.plugin.settings.showExplorerMarkers = value;
+						await this.plugin.saveSettings();
+						this.plugin.refreshExplorerMarkers();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(t(this.plugin, "settings.openLinksPanelName"))
+			.setDesc(t(this.plugin, "settings.openLinksPanelDesc"))
+			.addButton((btn) =>
+				btn
+					.setButtonText(t(this.plugin, "settings.openLinksPanel"))
+					.onClick(() => this.plugin.activateLinksPanel()),
+			);
+
+		new Setting(containerEl)
 			.setName(t(this.plugin, "settings.newLink"))
 			.setDesc(t(this.plugin, "settings.newLinkDesc"))
 			.addButton((btn) =>
@@ -58,93 +77,6 @@ export class LnsSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		const listEl = containerEl.createDiv({ cls: "lns-link-list" });
-
-		if (this.plugin.settings.links.length === 0) {
-			listEl.createEl("p", {
-				cls: "lns-empty",
-				text: t(this.plugin, "settings.empty"),
-			});
-			return;
-		}
-
-		for (const entry of this.plugin.settings.links) {
-			const status = checkLinkHealth(entry);
-			const rel = path.relative(
-				this.plugin.getVaultBase(),
-				entry.linkPath,
-			);
-
-			const row = listEl.createDiv({ cls: "lns-link-row" });
-			row.createEl("div", {
-				cls: `lns-health lns-health-${status.health}`,
-				text: this.healthLabel(status.health),
-			});
-
-			const info = row.createDiv({ cls: "lns-link-info" });
-			info.createEl("strong", { text: rel });
-			info.createEl("div", {
-				cls: "lns-link-detail",
-				text: t(this.plugin, "settings.sourceLabel", { path: entry.source }),
-			});
-
-			new Setting(row)
-				.addButton((btn) =>
-					btn
-						.setButtonText(t(this.plugin, "settings.showInFinder"))
-						.setDisabled(status.health === "missing_link")
-						.onClick(() => {
-							try {
-								// eslint-disable-next-line @typescript-eslint/no-explicit-any
-								const shell = (window as any).require?.("electron")?.shell;
-								shell?.showItemInFolder(entry.linkPath);
-							} catch {
-								new Notice(t(this.plugin, "notice.pathOpenFailed"));
-							}
-						}),
-				)
-				.addButton((btn) =>
-					btn
-						.setButtonText(t(this.plugin, "settings.openNote"))
-						.setDisabled(
-							entry.kind !== "file" || status.health === "missing_link",
-						)
-						.onClick(async () => {
-							const file = this.app.vault.getAbstractFileByPath(rel);
-							if (file instanceof TFile) {
-								await this.app.workspace.getLeaf(false).openFile(file);
-							} else {
-								new Notice(t(this.plugin, "notice.fileNotInVault"));
-							}
-						}),
-				)
-				.addButton((btn) =>
-					btn
-						.setButtonText(t(this.plugin, "settings.removeLink"))
-						.setWarning()
-						.onClick(async () => {
-							try {
-								if (status.health !== "missing_link") {
-									removeSymlink(entry.linkPath);
-								}
-								await this.plugin.removeEntry(entry.id);
-								new Notice(
-									t(this.plugin, "notice.removed", { path: rel }),
-								);
-								this.display();
-							} catch (e) {
-								new Notice(
-									t(this.plugin, "notice.removeFailed", {
-										message: translateError(this.plugin, e),
-									}),
-								);
-							}
-						}),
-				);
-		}
-	}
-
-	private healthLabel(health: LinkHealth): string {
-		return t(this.plugin, `health.${health}` as MessageKey);
+		renderLinkList(containerEl, this.plugin, () => this.display());
 	}
 }

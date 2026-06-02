@@ -13,6 +13,8 @@ export interface SymlinkEntry {
 export interface LnsSettings {
 	links: SymlinkEntry[];
 	locale: LnsLocale;
+	/** Highlight registered symlinks in the file explorer (icon + color). */
+	showExplorerMarkers: boolean;
 	/** Last source path used per link kind (directory vs file). */
 	lastSourcePaths?: Partial<Record<LinkKind, string>>;
 }
@@ -20,5 +22,6 @@ export interface LnsSettings {
 export const DEFAULT_SETTINGS: LnsSettings = {
 	links: [],
 	locale: "auto",
+	showExplorerMarkers: true,
 	lastSourcePaths: {},
 };

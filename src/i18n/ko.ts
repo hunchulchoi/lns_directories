@@ -2,12 +2,17 @@ import type { MessageKey } from "./en";
 
 export const ko: Record<MessageKey, string> = {
 	"ribbon.tooltip": "외부 경로 연결",
+	"ribbon.openLinksPanel": "연결 목록 패널",
 	"ribbon.linkDirectory": "디렉터리 연결…",
 	"ribbon.linkFile": "파일 연결…",
 
+	"cmd.openLinksPanel": "LNS 연결 목록 패널 열기",
 	"cmd.linkDirectory": "디렉터리 심볼릭 링크 연결",
 	"cmd.linkFile": "파일 심볼릭 링크 연결",
 	"cmd.refreshLinks": "연결 상태 새로고침",
+
+	"panel.title": "LNS 연결",
+	"panel.refresh": "새로고침",
 
 	"menu.addSymDirectory": "심볼디렉토리 추가",
 	"menu.addSymFile": "심볼파일 추가",
@@ -43,6 +48,14 @@ export const ko: Record<MessageKey, string> = {
 	"settings.showInFinder": "Finder에서 보기",
 	"settings.openNote": "노트로 열기",
 	"settings.removeLink": "링크 제거",
+	"settings.revealInExplorer": "탐색기에서 보기",
+	"settings.showExplorerMarkersName": "파일 탐색기에서 링크 표시",
+	"settings.showExplorerMarkersDesc":
+		"등록된 심볼릭 링크 경로에 사이드바 파일 트리에서 아이콘과 색을 표시합니다.",
+	"settings.openLinksPanelName": "연결 목록 패널",
+	"settings.openLinksPanelDesc":
+		"등록된 연결만 모아 보는 사이드바 뷰를 엽니다.",
+	"settings.openLinksPanel": "연결 목록 패널 열기",
 	"settings.localeName": "언어",
 	"settings.localeDesc": "플러그인 UI 표시 언어",
 

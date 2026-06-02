@@ -5,9 +5,16 @@ import {
 	Plugin,
 	FileSystemAdapter,
 	TFolder,
+	WorkspaceLeaf,
 } from "obsidian";
 import { LinkModal } from "./link-modal";
 import { t } from "./i18n";
+import {
+	registerExplorerMarkerRefresh,
+	removeExplorerMarkers,
+	updateExplorerMarkers,
+} from "./explorer-markers";
+import { LNS_LINKS_VIEW_TYPE, LnsLinksPanelView } from "./links-panel";
 import { LnsSettingTab } from "./settings-tab";
 import { getVaultBasePath } from "./symlink-manager";
 import {
@@ -23,10 +30,24 @@ export default class LnsDirectoriesPlugin extends Plugin {
 	async onload(): Promise<void> {
 		await this.loadSettings();
 
+		this.registerView(
+			LNS_LINKS_VIEW_TYPE,
+			(leaf: WorkspaceLeaf) => new LnsLinksPanelView(leaf, this),
+		);
+		registerExplorerMarkerRefresh(this);
+		this.refreshExplorerMarkers();
+
 		this.addSettingTab(new LnsSettingTab(this.app, this));
 
 		this.addRibbonIcon("link", t(this, "ribbon.tooltip"), (evt) => {
 			const menu = new Menu();
+			menu.addItem((item) =>
+				item
+					.setTitle(t(this, "ribbon.openLinksPanel"))
+					.setIcon("link")
+					.onClick(() => this.activateLinksPanel()),
+			);
+			menu.addSeparator();
 			menu.addItem((item) =>
 				item
 					.setTitle(t(this, "ribbon.linkDirectory"))
@@ -40,6 +61,12 @@ export default class LnsDirectoriesPlugin extends Plugin {
 					.onClick(() => this.openLinkModal("file")),
 			);
 			menu.showAtMouseEvent(evt);
+		});
+
+		this.addCommand({
+			id: "open-links-panel",
+			name: t(this, "cmd.openLinksPanel"),
+			callback: () => this.activateLinksPanel(),
 		});
 
 		this.addCommand({
@@ -58,7 +85,7 @@ export default class LnsDirectoriesPlugin extends Plugin {
 			id: "refresh-links",
 			name: t(this, "cmd.refreshLinks"),
 			callback: () => {
-				this.refreshSettingsTab();
+				this.refreshUi();
 				new Notice(
 					t(this, "notice.refreshCount", {
 						count: this.settings.links.length,
@@ -93,7 +120,9 @@ export default class LnsDirectoriesPlugin extends Plugin {
 		);
 	}
 
-	onunload(): void {}
+	onunload(): void {
+		removeExplorerMarkers();
+	}
 
 	getVaultBase(): string {
 		return getVaultBasePath(this.app.vault.adapter as FileSystemAdapter);
@@ -107,6 +136,9 @@ export default class LnsDirectoriesPlugin extends Plugin {
 		}
 		if (!this.settings.locale) {
 			this.settings.locale = "auto";
+		}
+		if (this.settings.showExplorerMarkers === undefined) {
+			this.settings.showExplorerMarkers = true;
 		}
 		if (!this.settings.lastSourcePaths) {
 			this.settings.lastSourcePaths = {};
@@ -124,12 +156,13 @@ export default class LnsDirectoriesPlugin extends Plugin {
 		}
 		this.settings.lastSourcePaths[entry.kind] = entry.source;
 		await this.saveSettings();
-		this.refreshSettingsTab();
+		this.refreshUi();
 	}
 
 	async removeEntry(id: string): Promise<void> {
 		this.settings.links = this.settings.links.filter((l) => l.id !== id);
 		await this.saveSettings();
+		this.refreshUi();
 	}
 
 	openLinkModal(kind: LinkKind, parentFolder = ""): void {
@@ -147,6 +180,30 @@ export default class LnsDirectoriesPlugin extends Plugin {
 		).open();
 	}
 
+	async activateLinksPanel(): Promise<void> {
+		const { workspace } = this.app;
+		const existing = workspace.getLeavesOfType(LNS_LINKS_VIEW_TYPE);
+		if (existing.length > 0) {
+			workspace.revealLeaf(existing[0]);
+			const view = existing[0].view;
+			if (view instanceof LnsLinksPanelView) {
+				view.render();
+			}
+			return;
+		}
+
+		const leaf = workspace.getRightLeaf(false);
+		if (!leaf) return;
+		await leaf.setViewState({
+			type: LNS_LINKS_VIEW_TYPE,
+			active: true,
+		});
+	}
+
+	refreshExplorerMarkers(): void {
+		updateExplorerMarkers(this);
+	}
+
 	refreshSettingsTab(): void {
 		const setting = (
 			this.app as App & {
@@ -160,7 +217,20 @@ export default class LnsDirectoriesPlugin extends Plugin {
 		}
 	}
 
-	reloadUi(): void {
+	refreshLinksPanel(): void {
+		for (const leaf of this.app.workspace.getLeavesOfType(
+			LNS_LINKS_VIEW_TYPE,
+		)) {
+			const view = leaf.view;
+			if (view instanceof LnsLinksPanelView) {
+				view.render();
+			}
+		}
+	}
+
+	refreshUi(): void {
+		this.refreshExplorerMarkers();
 		this.refreshSettingsTab();
+		this.refreshLinksPanel();
 	}
 }
