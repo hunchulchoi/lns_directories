@@ -1,0 +1,35 @@
+# Obsidian 플러그인 릴리스
+#
+# 태그 push 시 빌드 후 GitHub Release(draft)에
+# main.js, manifest.json, styles.css를 업로드합니다.
+#
+# 사전 준비:
+# - Settings → Actions → General → Workflow permissions:
+#   "Read and write permissions" 활성화
+# - manifest.json version과 Git tag 이름이 일치해야 합니다
+#   tag 이름은 v{version} 형식 (manifest.json version과 일치)
+#
+# 릴리스 방법:
+#   # manifest.json / package.json 버전 bump 후
+#   git tag -a v1.0.2 -m "v1.0.2"
+#   git push origin main
+#   git push origin v1.0.2
+
+name: Release Obsidian plugin
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: choihunchul/github--actions/.github/workflows/release-obsidian-plugin.yml@main
+    with:
+      build-command: npm run build
+      tag-prefix: v
+      draft: false
